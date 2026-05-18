@@ -16,6 +16,17 @@ class MissingValueAgent(BaseAgent):
 
         return any(word in query.lower() for word in keywords)
 
+    def score(self, query: str) -> float:
+        keywords = [
+            "missing",
+            "null",
+            "empty",
+            "nan",
+            "incomplete",
+        ]
+        matches = sum(1 for word in keywords if word in query.lower())
+        return min(1.0, matches / len(keywords) + 0.1)
+
     def handle(self, query: str):
         if not DATAFRAME_STORE:
             return {
@@ -28,32 +39,35 @@ class MissingValueAgent(BaseAgent):
         citations = []
 
         for file_name, df in DATAFRAME_STORE.items():
-            missing_counts = df.isnull().sum()
+            if isinstance(df, dict):
+                # multiple sheets
+                for sheet_name, sheet_df in df.items():
+                    missing_counts = sheet_df.isna().sum()
+                    total_missing = int(missing_counts.sum())
 
-            insights.append(
-                f"Missing value analysis for {file_name}:"
-            )
+                    if total_missing != 0:
+                    #     insights.append(f"No missing values detected in {file_name} (sheet: {sheet_name}).")
+                    # else:
+                        for column, count in missing_counts.items():
+                            if count > 0:
+                                insights.append(f"Column '{column}' has {int(count)} missing values.")
 
-            for column, count in missing_counts.items():
-                if count > 0:
-                    insights.append(
-                        f"Column '{column}' has {count} missing values."
-                    )
+                    filename = file_name.split("/")[-1].split("\\")[-1]
+                    citations.append({"source": filename, "page": f"{sheet_name}"})
+            else:
+                # single DataFrame (CSV or single-sheet)
+                missing_counts = df.isna().sum()
+                total_missing = int(missing_counts.sum())
 
-            if missing_counts.sum() == 0:
-                insights.append(
-                    "No missing values detected."
-                )
+                if total_missing != 0:
+                #     insights.append(f"No missing values detected in {file_name}.")
+                # else:
+                    for column, count in missing_counts.items():
+                        if count > 0:
+                            insights.append(f"Column '{column}' has {int(count)} missing values.")
 
-            insights.append(
-                "Potential causes may include incomplete reporting, delayed project updates, or inconsistent data collection."
-            )
-
-            filename = file_name.split("/")[-1].split("\\")[-1]
-            citations.append({
-                "source": filename,
-                "page": "sheet-data",
-            })
+                filename = file_name.split("/")[-1].split("\\")[-1]
+                citations.append({"source": filename, "page": "sheet-data"})
 
         return {
             "agent": self.name,

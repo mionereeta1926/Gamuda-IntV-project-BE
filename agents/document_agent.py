@@ -19,8 +19,11 @@ class DocumentQAAgent(BaseAgent):
 
         return any(word in query.lower() for word in keywords)
 
+    def score(self, query: str) -> float:
+        return 0.05 if query.strip() else 0.0
+
     def handle(self, query: str):
-        docs = retrieve_documents(query)
+        docs = retrieve_documents(query, source_level=True)
 
         context = "\n\n".join([
             doc["content"] for doc in docs
@@ -50,20 +53,29 @@ class DocumentQAAgent(BaseAgent):
 
         for doc in docs:
             filename = doc["metadata"].get("source", "Unknown").split("/")[-1].split("\\")[-1]
-            page = doc["metadata"].get("page", 1)
-            citation_key = (filename, page)
+            sheet = doc["metadata"].get("sheet")
+
+            if sheet is not None:
+                citation_key = (filename, sheet)
+            else:
+                citation_key = (filename, doc["metadata"].get("page", 1))
 
             if citation_key in seen:
                 continue
 
             seen.add(citation_key)
-            citations.append({
-                "source": filename,
-                "page": page,
-            })
+
+            citation = {"source": filename}
+            if sheet is not None:
+                citation["sheet"] = sheet
+            else:
+                citation["page"] = doc["metadata"].get("page", 1)
+
+            citations.append(citation)
 
         return {
             "agent": self.name,
             "answer": answer,
             "citations": citations,
+            "_context": context,
         }

@@ -1,3 +1,5 @@
+import services.logging_service
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 

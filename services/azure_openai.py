@@ -2,6 +2,7 @@ import os
 
 from dotenv import load_dotenv
 from openai import AzureOpenAI
+from services.logging_service import log_print
 
 load_dotenv()
 
@@ -42,7 +43,7 @@ vector_client = AzureOpenAI(
 # =============================
 
 def generate_chat_response(system_prompt, user_prompt):
-    print("Generating chat response ...")
+    log_print("Generating chat response ...")
     response = openai_client.chat.completions.create(
         messages=[
             {
@@ -66,7 +67,7 @@ def generate_chat_response(system_prompt, user_prompt):
 # =============================
 
 def generate_embedding(text):
-    print("Generating embedding ...")
+    log_print("Generating embedding ...")
     response = vector_client.embeddings.create(
         model=embedding_deployment,
         input=[text]
