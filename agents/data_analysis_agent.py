@@ -90,7 +90,7 @@ class DataAnalysisAgent(BaseAgent):
                     "page": "sheet-data",
                 })
 
-        docs = retrieve_documents(query, source_level=True)
+        docs = retrieve_documents(query, source_level=False)
 
         context = "\n\n".join([
             doc["content"] for doc in docs

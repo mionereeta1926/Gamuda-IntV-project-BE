@@ -24,7 +24,7 @@ class DocumentQAAgent(BaseAgent):
         return 0.05 if query.strip() else 0.0
 
     def handle(self, query: str, session_id: str | None = None):
-        docs = retrieve_documents(query, source_level=True)
+        docs = retrieve_documents(query, source_level=False)
 
         context = "\n\n".join([
             doc["content"] for doc in docs
