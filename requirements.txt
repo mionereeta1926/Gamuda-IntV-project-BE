@@ -61,7 +61,7 @@ openpyxl==3.1.5
 # orjson==3.11.9
 # ormsgpack==1.12.2
 # packaging==26.2
-# pandas==2.3.3
+pandas==2.3.3
 # propcache==0.5.2
 # pydantic==2.13.4
 # pydantic-settings==2.14.1
