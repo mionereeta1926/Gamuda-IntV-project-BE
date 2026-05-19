@@ -73,6 +73,7 @@ class MissingValueAgent(BaseAgent):
             context = "\n\n".join(dataframe_answer) + "\n\n" + context
         else:
             context = "\n\n".join(dataframe_answer)
+            docs = []
 
         memory_history = build_chat_history(session_id) if session_id else []
 
@@ -98,28 +99,28 @@ class MissingValueAgent(BaseAgent):
         insights.append(answer)
 
         seen = set()
+        if docs:
+            for doc in docs:
+                filename = doc["metadata"].get("source", "Unknown").split("/")[-1].split("\\")[-1]
+                sheet = doc["metadata"].get("sheet")
 
-        for doc in docs:
-            filename = doc["metadata"].get("source", "Unknown").split("/")[-1].split("\\")[-1]
-            sheet = doc["metadata"].get("sheet")
+                if sheet is not None:
+                    citation_key = (filename, sheet)
+                else:
+                    citation_key = (filename, doc["metadata"].get("page", 1))
 
-            if sheet is not None:
-                citation_key = (filename, sheet)
-            else:
-                citation_key = (filename, doc["metadata"].get("page", 1))
+                if citation_key in seen:
+                    continue
 
-            if citation_key in seen:
-                continue
+                seen.add(citation_key)
 
-            seen.add(citation_key)
+                citation = {"source": filename}
+                if sheet is not None:
+                    citation["sheet"] = sheet
+                else:
+                    citation["page"] = doc["metadata"].get("page", 1)
 
-            citation = {"source": filename}
-            if sheet is not None:
-                citation["sheet"] = sheet
-            else:
-                citation["page"] = doc["metadata"].get("page", 1)
-
-            citations.append(citation)
+                citations.append(citation)
 
         unique_citations= list(
             {item["source"]: item for item in citations}.values()
