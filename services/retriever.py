@@ -7,12 +7,17 @@ from services.vectorstore import load_vectorstore
 
 def retrieve_documents(
     query,
-    top_k=10,
+    top_k=20,
     source_level=False,
     max_distance=2.0,
     distance_window=1.0
 ):
     index, documents_store = load_vectorstore()
+    doc_store_length = len(documents_store)
+    log_print(f"Vectorstore loaded with {doc_store_length} documents")
+    if top_k > doc_store_length:
+        top_k = doc_store_length
+
 
     query_embedding = generate_embedding(query)
     query_vector = np.array([query_embedding]).astype("float32")

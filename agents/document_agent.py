@@ -1,5 +1,6 @@
 from agents.base_agent import BaseAgent
 
+from services.logging_service import log_print
 from services.memory import build_chat_history
 from services.retriever import retrieve_documents
 from services.llm_service import generate_chat_response
@@ -23,14 +24,17 @@ class DocumentQAAgent(BaseAgent):
     def score(self, query: str) -> float:
         return 0.05 if query.strip() else 0.0
 
-    def handle(self, query: str, session_id: str | None = None):
+    def handle(self, memory_needed: bool, query: str, session_id: str | None = None):
         docs = retrieve_documents(query, source_level=False)
 
         context = "\n\n".join([
             doc["content"] for doc in docs
         ])
-
-        memory_history = build_chat_history(session_id) if session_id else []
+        if memory_needed:
+            memory_history = build_chat_history(session_id) if session_id else []
+        else:
+            log_print("Memory not needed, skipping chat history.")
+            memory_history = None
 
         user_prompt = f"""
         Answer the question using ONLY the provided context.

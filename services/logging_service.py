@@ -65,6 +65,7 @@ def log_agent_call(agent_name: str, request_id: str, query: str, response: dict,
     output_cost = (output_tokens / 1_000_000) * OUTPUT_COST_PER_MILLION
 
     token_cost = round(input_cost + output_cost, 8)
+    # total_message_tokens = count_tokens(get_token_count_for_response())
 
     payload = {
         "timestamp": datetime.utcnow().isoformat() + "Z",

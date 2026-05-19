@@ -1,6 +1,7 @@
 from agents.base_agent import BaseAgent
 from services.llm_service import generate_chat_response
 from services.file_loader import DATAFRAME_STORE
+from services.logging_service import log_print
 from services.memory import build_chat_history
 from services.retriever import retrieve_documents
 
@@ -30,7 +31,7 @@ class MissingValueAgent(BaseAgent):
         matches = sum(1 for word in keywords if word in query.lower())
         return min(1.0, matches / len(keywords) + 0.1)
 
-    def handle(self, query: str, session_id: str | None = None):
+    def handle(self, memory_needed: bool, query: str, session_id: str | None = None):
         insights = []
         citations = []
         dataframe_answer = []
@@ -75,7 +76,11 @@ class MissingValueAgent(BaseAgent):
             context = "\n\n".join(dataframe_answer)
             docs = []
 
-        memory_history = build_chat_history(session_id) if session_id else []
+        if memory_needed:
+            memory_history = build_chat_history(session_id) if session_id else []
+        else:
+            log_print("Memory not needed, skipping chat history.")
+            memory_history = None
 
         user_prompt = f"""
         Answer the question using ONLY the provided context.
