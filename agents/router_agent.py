@@ -3,9 +3,11 @@ import uuid
 import numpy as np
 
 from agents.document_agent import DocumentQAAgent
-# from agents.data_analysis_agent import DataAnalysisAgent
+from agents.financial_analysis_agent import FinancialAnalysisAgent
+from agents.tabulate_agent import TabulateAgent
 from agents.missing_value_agent import MissingValueAgent
 from services.embedding_service import generate_embedding
+from services.logging_service import log_print
 
 
 class RouterAgent:
@@ -17,15 +19,31 @@ class RouterAgent:
             "incomplete spreadsheet data",
             "dataset missing values analysis",
         ],
-        # DataAnalysisAgent: [
-        #     "budget analysis",
-        #     "cost analysis",
-        #     "data trends",
-        #     "spreadsheet analysis",
-        #     "excel report",
-        #     "csv analytics",
-        #     "financial summary",
-        # ],
+        TabulateAgent: [
+            "Output in table format",
+            "Tabulate the data",
+            "Tabulate the findings",
+            "Show in Table",
+            "Generate Table",
+            "Generate Spreadsheet",
+            "Generate Excel",
+            "Generate CSV",
+            "show results in a table",
+            "format as table",
+            "present in tabular format",
+            "convert findings into a table",
+            "generate markdown table",
+            "display rows and columns",
+            "create structured table",
+        ],
+        FinancialAnalysisAgent: [
+            "budget analysis",
+            "cost analysis",
+            "financial summary",
+            "gain report",
+            "loss report",
+            "financial trends",
+        ],
         DocumentQAAgent: [
             "project report",
             "document question",
@@ -33,21 +51,16 @@ class RouterAgent:
             "timeline overview",
             "project summary",
             "document-based question",
-            "budget analysis",
-            "cost analysis",
             "data trends",
-            "spreadsheet analysis",
-            "excel report",
-            "csv analytics",
-            "financial summary",
         ],
     }
 
     def __init__(self):
         self.agents = [
             MissingValueAgent(),
-            # DataAnalysisAgent(),
+            TabulateAgent(),
             DocumentQAAgent(),
+            FinancialAnalysisAgent(),
         ]
         self.intent_embeddings = self._build_intent_embeddings()
 
@@ -81,6 +94,7 @@ class RouterAgent:
         request_id = str(uuid.uuid4())
         query_embedding = np.array(generate_embedding(query), dtype=np.float32)
         scored_agents = [(agent, self._agent_score(agent, query_embedding)) for agent in self.agents]
+        log_print(f"RouterAgent scored agents: {[(agent.name, score) for agent, score in scored_agents]}")
         best_agent, best_score = max(scored_agents, key=lambda item: item[1])
 
         document_agent = next(

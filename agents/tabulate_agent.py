@@ -5,23 +5,30 @@ from services.retriever import retrieve_documents
 from services.llm_service import generate_chat_response
 
 
-class DocumentQAAgent(BaseAgent):
-    name = "Document Q&A Agent"
+class TabulateAgent(BaseAgent):
+    name = "Tabulate Agent"
 
     def can_handle(self, query: str):
         keywords = [
-            "report",
-            "document",
-            "risk",
-            "timeline",
-            "project",
-            "summary",
+            "Tabulate",
+            "Show in Table",
+            "Generate Table",
+            "Generate Excel",
+            "Generate CSV",
         ]
 
         return any(word in query.lower() for word in keywords)
 
     def score(self, query: str) -> float:
-        return 0.05 if query.strip() else 0.0
+        keywords = [
+            "Tabulate",
+            "Show in Table",
+            "Generate Table",
+            "Generate Excel",
+            "Generate CSV",
+        ]
+        matches = sum(1 for word in keywords if word in query.lower())
+        return min(1.0, matches / len(keywords) + 0.1)
 
     def handle(self, query: str, session_id: str | None = None):
         docs = retrieve_documents(query, source_level=False)
@@ -45,7 +52,8 @@ class DocumentQAAgent(BaseAgent):
         """
 
         answer = generate_chat_response(
-            system_prompt="You are a project intelligence assistant mainly works for Q&A tasks.",
+            system_prompt="You are a project intelligence assistant mainly works for analysing project data. " \
+            "The output must be in a proper table markdown format. No other format is allowed.",
             user_prompt=user_prompt,
             chat_history=memory_history if memory_history else None,
         )
@@ -74,7 +82,7 @@ class DocumentQAAgent(BaseAgent):
                 citation["page"] = doc["metadata"].get("page", 1)
 
             citations.append(citation)
-
+        
         unique_citations= list(
             {item["source"]: item for item in citations}.values()
         )
