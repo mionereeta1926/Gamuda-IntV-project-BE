@@ -58,6 +58,14 @@ def log_agent_call(agent_name: str, request_id: str, query: str, response: dict,
     elif isinstance(response, dict) and "context" in response:
         context = response.pop("context")
 
+    INPUT_COST_PER_MILLION = 0.15
+    OUTPUT_COST_PER_MILLION = 0.60
+
+    input_cost = (input_tokens / 1_000_000) * INPUT_COST_PER_MILLION
+    output_cost = (output_tokens / 1_000_000) * OUTPUT_COST_PER_MILLION
+
+    token_cost = round(input_cost + output_cost, 8)
+
     payload = {
         "timestamp": datetime.utcnow().isoformat() + "Z",
         "request_id": request_id,
@@ -65,9 +73,16 @@ def log_agent_call(agent_name: str, request_id: str, query: str, response: dict,
         "query": query,
         "response": response,
         "latency_ms": int(latency_seconds * 1000),
+
         "input_tokens": input_tokens,
         "output_tokens": output_tokens,
         "total_tokens": input_tokens + output_tokens,
+
+        "input_token_cost_usd": round(input_cost, 8),
+        "output_token_cost_usd": round(output_cost, 8),
+        "token_cost_usd": token_cost,
+
+        "model": "openai/gpt-oss-120b",
     }
 
     if context is not None:
