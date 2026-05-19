@@ -141,10 +141,14 @@ class FinancialAnalysisAgent(BaseAgent):
                     citation["page"] = doc["metadata"].get("page", 1)
 
                 citations.append(citation)
+        
+        unique_citations= list(
+            {item["source"]: item for item in citations}.values()
+        )
 
         return {
             "agent": self.name,
             "answer": "\n".join(insights),
-            "citations": citations,
+            "citations": unique_citations,
             "_context": context,
         }
