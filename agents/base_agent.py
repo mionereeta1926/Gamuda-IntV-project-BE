@@ -13,15 +13,15 @@ class BaseAgent:
     def score(self, query: str) -> float:
         return 0.0
 
-    def handle(self, query: str):
+    def handle(self, query: str, session_id: str | None = None):
         raise NotImplementedError
 
-    def handle_with_logging(self, query: str, request_id: str | None = None):
+    def handle_with_logging(self, query: str, request_id: str | None = None, session_id: str | None = None):
         request_id = request_id or str(uuid.uuid4())
         start_time = time.time()
 
         try:
-            response = self.handle(query)
+            response = self.handle(query, session_id=session_id)
         except Exception as exc:
             latency = time.time() - start_time
             log_agent_call(

@@ -3,7 +3,7 @@ import uuid
 import numpy as np
 
 from agents.document_agent import DocumentQAAgent
-from agents.data_analysis_agent import DataAnalysisAgent
+# from agents.data_analysis_agent import DataAnalysisAgent
 from agents.missing_value_agent import MissingValueAgent
 from services.embedding_service import generate_embedding
 
@@ -17,7 +17,22 @@ class RouterAgent:
             "incomplete spreadsheet data",
             "dataset missing values analysis",
         ],
-        DataAnalysisAgent: [
+        # DataAnalysisAgent: [
+        #     "budget analysis",
+        #     "cost analysis",
+        #     "data trends",
+        #     "spreadsheet analysis",
+        #     "excel report",
+        #     "csv analytics",
+        #     "financial summary",
+        # ],
+        DocumentQAAgent: [
+            "project report",
+            "document question",
+            "risk assessment",
+            "timeline overview",
+            "project summary",
+            "document-based question",
             "budget analysis",
             "cost analysis",
             "data trends",
@@ -26,20 +41,12 @@ class RouterAgent:
             "csv analytics",
             "financial summary",
         ],
-        DocumentQAAgent: [
-            "project report",
-            "document question",
-            "risk assessment",
-            "timeline overview",
-            "project summary",
-            "document-based question",
-        ],
     }
 
     def __init__(self):
         self.agents = [
             MissingValueAgent(),
-            DataAnalysisAgent(),
+            # DataAnalysisAgent(),
             DocumentQAAgent(),
         ]
         self.intent_embeddings = self._build_intent_embeddings()
@@ -70,7 +77,7 @@ class RouterAgent:
 
         return max(self._cosine_similarity(query_embedding, intent) for intent in intent_vectors)
 
-    def route(self, query):
+    def route(self, query, session_id: str = "default"):
         request_id = str(uuid.uuid4())
         query_embedding = np.array(generate_embedding(query), dtype=np.float32)
         scored_agents = [(agent, self._agent_score(agent, query_embedding)) for agent in self.agents]
@@ -82,6 +89,6 @@ class RouterAgent:
         )
 
         if best_score < 0.1 and document_agent is not None:
-            return document_agent.handle_with_logging(query, request_id=request_id)
+            return document_agent.handle_with_logging(query, request_id=request_id, session_id=session_id)
 
-        return best_agent.handle_with_logging(query, request_id=request_id)
+        return best_agent.handle_with_logging(query, request_id=request_id, session_id=session_id)

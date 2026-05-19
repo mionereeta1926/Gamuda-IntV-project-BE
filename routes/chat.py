@@ -16,7 +16,7 @@ class ChatRequest(BaseModel):
 
 @router.post("/chat")
 def chat(request: ChatRequest):
-    response = router_agent.route(request.question)
+    response = router_agent.route(request.question, request.session_id)
 
     save_memory(
         request.session_id,

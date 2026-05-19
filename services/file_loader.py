@@ -213,7 +213,7 @@ def _build_spreadsheet_documents(df, source_name, sheet_name):
             "\n".join(row_items)
         )
 
-        log_print(f"ROW CONTENT:\n{content}")
+        # log_print(f"ROW CONTENT:\n{content}")
 
         documents.append(
             Document(

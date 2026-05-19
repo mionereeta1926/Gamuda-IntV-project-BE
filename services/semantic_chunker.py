@@ -69,14 +69,14 @@ def clean_documents(documents):
         if not isinstance(content, str):
             continue
 
-        log_print(f"RAW DOC: {i}")
-        log_print(content[:2000])
+        # log_print(f"RAW DOC: {i}")
+        # log_print(content[:2000])
 
         # Clean only unwanted words/patterns
         cleaned_content = clean_text(content)
 
-        log_print(f"CLEANED DOC: {i}")
-        log_print(cleaned_content[:2000])
+        # log_print(f"CLEANED DOC: {i}")
+        # log_print(cleaned_content[:2000])
 
         if cleaned_content:
             doc.page_content = cleaned_content
@@ -96,7 +96,7 @@ def semantic_chunk_documents(documents):
 
     # Step 2: Token-aware chunking
     splitter = TokenTextSplitter(
-        chunk_size=2000,
+        chunk_size=4000,
         chunk_overlap=100,
         encoding_name="gpt2",
     )

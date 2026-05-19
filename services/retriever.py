@@ -5,7 +5,13 @@ from services.logging_service import log_print
 from services.vectorstore import load_vectorstore
 
 
-def retrieve_documents(query, top_k=5, source_level=False):
+def retrieve_documents(
+    query,
+    top_k=10,
+    source_level=False,
+    max_distance=2.0,
+    distance_window=1.0
+):
     index, documents_store = load_vectorstore()
 
     query_embedding = generate_embedding(query)
@@ -15,26 +21,82 @@ def retrieve_documents(query, top_k=5, source_level=False):
 
     retrieved_docs = []
 
+    # First pass: collect valid docs under max_distance
     for position, idx in enumerate(indices[0]):
-        if idx < len(documents_store):
-            doc = documents_store[idx].copy()
-            doc["distance"] = float(distances[0][position])
-            retrieved_docs.append(doc)
 
-    if source_level and retrieved_docs:
+        if idx >= len(documents_store) or idx < 0:
+            continue
+
+        score = float(distances[0][position])
+
+        log_print(f"Doc idx: {idx}, Score: {score} : {documents_store[idx]['content'][:100]}")
+
+        # FILTER LEVEL 1:
+        # Discard if distance too high
+        if score > max_distance:
+            continue
+
+        doc = documents_store[idx].copy()
+        doc["distance"] = score
+
+        retrieved_docs.append(doc)
+
+    # No valid docs
+    if not retrieved_docs:
+        log_print("No documents passed max distance filter")
+        return []
+
+    # Get best (lowest) distance
+    best_distance = min(doc["distance"] for doc in retrieved_docs)
+
+    # FILTER LEVEL 2:
+    # Keep only docs close to best result
+    filtered_docs = []
+
+    for doc in retrieved_docs:
+
+        # Example:
+        # best = 1.1
+        # allowed max = 2.1
+        if doc["distance"] <= best_distance + distance_window:
+            filtered_docs.append(doc)
+
+    if not filtered_docs:
+        log_print("No documents passed relative distance filter")
+        return []
+    else:
+        log_print(f"{len(filtered_docs)} documents passed relative distance filter (window: {distance_window})")
+
+    # Optional source grouping
+    if source_level:
         grouped = {}
-        for doc in retrieved_docs:
+
+        for doc in filtered_docs:
             source = doc["metadata"].get("source", "Unknown")
             grouped.setdefault(source, []).append(doc)
 
         best_source = None
-        best_score = None
+        best_avg_distance = None
+
         for source, docs in grouped.items():
-            avg_distance = sum(d["distance"] for d in docs) / len(docs)
-            if best_score is None or avg_distance < best_score:
-                best_score = avg_distance
+
+            avg_distance = (
+                sum(d["distance"] for d in docs) / len(docs)
+            )
+
+            if (
+                best_avg_distance is None
+                or avg_distance < best_avg_distance
+            ):
+                best_avg_distance = avg_distance
                 best_source = source
 
-        return sorted(grouped[best_source], key=lambda d: d["distance"]) if best_source else retrieved_docs
-    log_print("Retrieved documents:", retrieved_docs)
-    return retrieved_docs
+        return sorted(
+            grouped[best_source],
+            key=lambda d: d["distance"]
+        )
+
+    return sorted(
+        filtered_docs,
+        key=lambda d: d["distance"]
+    )
