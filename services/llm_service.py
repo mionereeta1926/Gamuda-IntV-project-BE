@@ -25,7 +25,9 @@ MODEL_NAME = "openai/gpt-oss-120b"
 
 def generate_chat_response(system_prompt, user_prompt, chat_history=None):
     log_print("------USING GROQ TO ANSWER-----")
-    log_print("Chat history:", chat_history)
+    if chat_history:
+        log_print("Chat history:", len(chat_history))
+    log_print("System prompt:", user_prompt)
     basic_system_prompt = "Answer using the context; " \
     "But if asked for suggestions or insights, you can provide your reasoning and insights logically. " \
     "Always answer in a concise manner. You are an intelligent assistant that helps user in understanding their projects and prepare for projects "
