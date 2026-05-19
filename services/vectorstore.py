@@ -11,10 +11,13 @@ documents_store = []
 index = None
 
 
-def initialize_faiss(dimension=384):
+def initialize_faiss():
     global index
 
     if index is None:
+        sample_embedding = generate_embedding("test")
+        dimension = len(sample_embedding)
+
         index = faiss.IndexFlatL2(dimension)
 
 
