@@ -6,6 +6,7 @@ from services.file_loader import load_file_for_rag
 from services.semantic_chunker import semantic_chunk_documents
 from services.vectorstore import save_to_vectorstore
 from services.logging_service import log_print
+import time
 
 router = APIRouter()
 
@@ -16,6 +17,7 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 @router.post("/upload")
 async def upload_files(files: list[UploadFile] = File(...)):
+    start_time = time.time()
     log_print(f"Upload request received: {[f.filename for f in files]}")
     uploaded = []
 
@@ -37,7 +39,8 @@ async def upload_files(files: list[UploadFile] = File(...)):
             )
 
         uploaded.append(file.filename)
-
+    time_taken_to_upload = (time.time() - start_time)
+    log_print(f"Upload processing completed, Time taken: {time_taken_to_upload} seconds")
     return {
         "uploaded_files": uploaded
     }
