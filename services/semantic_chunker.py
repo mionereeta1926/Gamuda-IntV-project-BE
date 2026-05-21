@@ -96,7 +96,7 @@ def semantic_chunk_documents(documents):
 
     # Step 2: Token-aware chunking
     splitter = TokenTextSplitter(
-        chunk_size=4000,
+        chunk_size=1500,
         chunk_overlap=100,
         encoding_name="gpt2",
     )
